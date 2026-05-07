@@ -1,0 +1,46 @@
+.wrap { position: relative; width: 100%; }
+.compact .input { padding: 0.45rem 0.9rem 0.45rem 2.2rem; font-size: 0.83rem; }
+.inputWrap {
+  position: relative;
+  display: flex; align-items: center;
+}
+.searchIcon {
+  position: absolute; left: 0.7rem;
+  color: var(--text-3); pointer-events: none;
+}
+.input {
+  width: 100%;
+  padding: 0.6rem 0.9rem 0.6rem 2.4rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-size: 0.88rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-glow);
+}
+.dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  list-style: none;
+  z-index: 200;
+  box-shadow: var(--shadow);
+  animation: fadeUp 0.15s ease;
+}
+.item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.item:hover { background: var(--surface-2); }
+.pin { color: var(--amber); flex-shrink: 0; }
+.cityName { font-size: 0.9rem; font-weight: 500; flex: 1; }
+.country { font-size: 0.78rem; color: var(--text-3); }
+.flag { font-size: 1rem; }

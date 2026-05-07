@@ -1,0 +1,36 @@
+.page {
+  min-height: calc(100vh - 60px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 2rem;
+  background: radial-gradient(ellipse at top, rgba(245,166,35,0.06) 0%, var(--bg) 60%);
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.5rem;
+  width: 100%; max-width: 420px;
+  display: flex; flex-direction: column; align-items: center;
+  box-shadow: var(--shadow-lg);
+}
+.logoMark {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--amber); color: #0f1117;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.2rem;
+}
+.title { font-size: 1.8rem; text-align: center; }
+.sub { color: var(--text-2); text-align: center; font-size: 0.9rem; margin-bottom: 1.8rem; }
+.form { width: 100%; display: flex; flex-direction: column; gap: 1rem; }
+.inputWrap { position: relative; }
+.inputIcon { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-3); }
+.input { padding-left: 2.3rem !important; width: 100%; }
+.eyeBtn {
+  position: absolute; right: 0.75rem; top: 50%; transform: translateY(-50%);
+  color: var(--text-3); cursor: pointer; line-height: 1;
+}
+.eyeBtn:hover { color: var(--amber); }
+.submitBtn { width: 100%; justify-content: center; padding: 0.75rem; margin-top: 0.5rem; }
+.switch { margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-2); text-align: center; }
+.switch a { color: var(--amber); font-weight: 500; }
+.switch a:hover { text-decoration: underline; }

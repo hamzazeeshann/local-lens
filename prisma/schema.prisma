@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Country {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  code   String @unique @db.Char(2)
+  cities City[]
+
+  @@map("countries")
+}
+
+model City {
+  id        Int     @id @default(autoincrement())
+  name      String
+  countryId Int     @map("country_id")
+  country   Country @relation(fields: [countryId], references: [id])
+  users     User[]
+  places    Place[]
+
+  @@unique([name, countryId])
+  @@map("cities")
+}
+
+model User {
+  id           String   @id @default(uuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  avatarUrl    String?  @map("avatar_url")
+  bio          String?
+  cityId       Int?     @map("city_id")
+  city         City?    @relation(fields: [cityId], references: [id])
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  places       Place[]
+  reviews      Review[]
+  likes        PlaceLike[]
+  visits       PlaceVisit[]
+
+  @@map("users")
+}
+
+model Place {
+  id          String   @id @default(uuid())
+  name        String
+  description String
+  category    String
+  cityId      Int      @map("city_id")
+  city        City     @relation(fields: [cityId], references: [id])
+  submittedBy String   @map("submitted_by")
+  submitter   User     @relation(fields: [submittedBy], references: [id])
+  latitude    Decimal  @db.Decimal(10, 7)
+  longitude   Decimal  @db.Decimal(10, 7)
+  photoUrls   String[] @map("photo_urls")
+  likeCount   Int      @default(0) @map("like_count")
+  visitCount  Int      @default(0) @map("visit_count")
+  score       Decimal  @default(0) @db.Decimal(10, 6)
+  status      String   @default("active") // active | possibly_closed | viral
+  lastActivity DateTime @default(now()) @map("last_activity")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  reviews     Review[]
+  likes       PlaceLike[]
+  visits      PlaceVisit[]
+
+  @@map("places")
+}
+
+model Review {
+  id        String   @id @default(uuid())
+  placeId   String   @map("place_id")
+  place     Place    @relation(fields: [placeId], references: [id])
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  content   String
+  isLocal   Boolean  @default(false) @map("is_local")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@unique([placeId, userId])
+  @@map("reviews")
+}
+
+model PlaceLike {
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id])
+  placeId   String   @map("place_id")
+  place     Place    @relation(fields: [placeId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, placeId])
+  @@map("place_likes")
+}
+
+model PlaceVisit {
+  id        BigInt   @id @default(autoincrement())
+  placeId   String   @map("place_id")
+  place     Place    @relation(fields: [placeId], references: [id])
+  visitorId String?  @map("visitor_id")
+  visitor   User?    @relation(fields: [visitorId], references: [id])
+  visitedAt DateTime @default(now()) @map("visited_at")
+
+  @@map("place_visits")
+}
