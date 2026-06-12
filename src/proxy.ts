@@ -10,9 +10,8 @@ export function proxy(req: NextRequest) {
   if (!isProtected) return NextResponse.next();
 
   const sessionToken =
-    req.cookies.get("next-auth.session-token")?.value ||
-    req.cookies.get("__Secure-next-auth.session-token")?.value ||
-    req.cookies.get("authjs.session-token")?.value;
+  req.cookies.get("__Secure-authjs.session-token")?.value ||
+  req.cookies.get("authjs.session-token")?.value;
 
   if (!sessionToken) {
     const url = req.nextUrl.clone();
