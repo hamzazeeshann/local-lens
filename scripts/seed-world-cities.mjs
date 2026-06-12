@@ -3,7 +3,11 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL, max: 10 });
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  max: 10,
+  ssl: process.env.DATABASE_URL?.includes("localhost") ? false : { rejectUnauthorized: false },
+});
 const prisma = new PrismaClient({ adapter: new PrismaPg(pool) });
 
 // CountriesNow API gives us country + cities in one call — no other API needed

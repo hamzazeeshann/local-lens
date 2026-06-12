@@ -10,7 +10,11 @@ const DATABASE_URL = process.env.DATABASE_URL || "postgresql://locallens:secret@
 
 async function setupTriggers() {
   const { default: pg } = await import("pg");
-  const pool = new pg.Pool({ connectionString: DATABASE_URL });
+  const isLocal = DATABASE_URL.includes("localhost");
+  const pool = new pg.Pool({
+    connectionString: DATABASE_URL,
+    ssl: isLocal ? false : { rejectUnauthorized: false },
+  });
 
   try {
     // Trigger 1: Auto-update score when like_count or visit_count changes
