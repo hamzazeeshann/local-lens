@@ -7,9 +7,14 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
+    "db:seed": "ts-node --project tsconfig.seed.json prisma/seed.ts",
+    "db:seed:world": "node scripts/seed-world-cities.mjs",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio",
+    "db:setup": "prisma migrate dev --name init && node scripts/setup-triggers.mjs && npm run db:seed",
+    "cron": "node scripts/cron.mjs",
+    "setup": "docker compose up -d && timeout 8 && npm run db:setup"
   },
   "prisma": {
     "seed": "npm run db:seed"

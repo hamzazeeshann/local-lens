@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import Link from "next/link";
 import CitySearchBar from "@/components/CitySearchBar/CitySearchBar";
 import PlaceCard from "@/components/PlaceCard/PlaceCard";
+import { serializePlaces } from "@/lib/serialize";
 import styles from "./page.module.css";
 import { TrendingUp, Gem, Zap, Globe, Clock } from "lucide-react";
 
@@ -40,7 +41,13 @@ async function getHomepageData() {
       FROM places p, users u
     `;
 
-    return { trending, underrated, viral, recent, stats: stats[0] };
+    return {
+      trending: serializePlaces(trending as any[]),
+      underrated: serializePlaces(underrated as any[]),
+      viral: serializePlaces(viral as any[]),
+      recent: serializePlaces(recent as any[]),
+      stats: stats[0],
+    };
   } catch {
     // DB not available yet — return empty state
     return { trending: [], underrated: [], viral: [], recent: [], stats: null };

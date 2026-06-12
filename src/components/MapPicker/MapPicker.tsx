@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef } from "react";
-import "leaflet/dist/leaflet.css";
 import type { Map, Marker, LeafletMouseEvent } from "leaflet";
 
 interface Props {
@@ -14,32 +13,40 @@ export default function MapPicker({ onLocationSelect, selected }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
 
-    // Dynamic import to avoid SSR issues
+    // Destroy existing (React StrictMode / hot reload safety)
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+      markerRef.current = null;
+    }
+
     import("leaflet").then((L) => {
-      // Fix default icon paths
-      delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)._getIconUrl;
+      if (!containerRef.current || mapRef.current) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
       L.Icon.Default.mergeOptions({
         iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
         iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
         shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
       });
 
-      const map = L.map(containerRef.current!, {
+      const map = L.map(containerRef.current, {
         center: selected ? [selected.lat, selected.lng] : [30.0, 20.0],
         zoom: selected ? 13 : 2,
         zoomControl: true,
       });
       mapRef.current = map;
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution: '© <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
 
-      // Custom amber marker icon
+      // Also try CartoDB as a fallback style override (optional)
+      // CartoDB: https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png
+
       const icon = L.divIcon({
         className: "",
         html: `<div style="
@@ -47,8 +54,7 @@ export default function MapPicker({ onLocationSelect, selected }: Props) {
           background:#f5a623;transform:rotate(-45deg);
           border:3px solid #0f1117;box-shadow:0 2px 8px rgba(245,166,35,0.5);
         "></div>`,
-        iconSize: [24, 24],
-        iconAnchor: [12, 24],
+        iconSize: [24, 24], iconAnchor: [12, 24],
       });
 
       if (selected) {
@@ -70,6 +76,7 @@ export default function MapPicker({ onLocationSelect, selected }: Props) {
       mapRef.current?.remove();
       mapRef.current = null;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

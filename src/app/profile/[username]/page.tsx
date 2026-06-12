@@ -2,6 +2,7 @@
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
 import ProfilePageClient from "./ProfilePageClient";
+import { serializePlace, serializePlaces } from "@/lib/serialize";
 
 export async function generateMetadata({ params }: { params: Promise<{ username: string }> }) {
   const { username } = await params;
@@ -67,6 +68,14 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
   const citiesCount = stats.length;
   const totalLikes = submissions.reduce((acc: number, p: any) => acc + p.likeCount, 0);
 
+  const serializedSubmissions = serializePlaces(submissions as any[]);
+  const serializedLikedPlaces = likedPlaces.map((l: any) => serializePlace(l.place as any));
+  const serializedReviews = reviews.map((r: any) => ({
+    ...r,
+    createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+    place: serializePlace(r.place as any),
+  }));
+
   return (
     <ProfilePageClient
       user={{
@@ -77,9 +86,9 @@ export default async function ProfilePage({ params }: { params: Promise<{ userna
         createdAt: user.createdAt.toISOString(),
         city: user.city ? { name: user.city.name, country: user.city.country.name } : null,
       }}
-      submissions={submissions as any[]}
-      likedPlaces={likedPlaces.map((l: any) => l.place) as any[]}
-      reviews={reviews as any[]}
+      submissions={serializedSubmissions as any[]}
+      likedPlaces={serializedLikedPlaces as any[]}
+      reviews={serializedReviews as any[]}
       stats={{ submissions: submissions.length, likes: totalLikes, reviews: reviews.length, cities: citiesCount }}
     />
   );

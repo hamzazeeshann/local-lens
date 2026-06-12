@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { serializePlace, serializePlaces } from "@/lib/serialize";
 import PlaceDetailClient from "./PlaceDetailClient";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -37,7 +38,6 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
 
   if (!place) notFound();
 
-  // Nearby places in same city
   const nearby = await prisma.place.findMany({
     where: { cityId: place.cityId, id: { not: id } },
     orderBy: { score: "desc" },
@@ -48,5 +48,19 @@ export default async function PlacePage({ params }: { params: Promise<{ id: stri
     },
   });
 
-  return <PlaceDetailClient place={place as any} nearby={nearby as any[]} />;
+  // Serialize reviews dates too
+  const serializedPlace = {
+    ...serializePlace(place as any),
+    reviews: (place.reviews as any[]).map((r) => ({
+      ...r,
+      createdAt: r.createdAt instanceof Date ? r.createdAt.toISOString() : r.createdAt,
+    })),
+  };
+
+  return (
+    <PlaceDetailClient
+      place={serializedPlace as any}
+      nearby={serializePlaces(nearby as any[])}
+    />
+  );
 }

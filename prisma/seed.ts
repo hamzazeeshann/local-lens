@@ -1,8 +1,15 @@
+import * as dotenv from "dotenv";
+dotenv.config();
+
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const prisma = new PrismaClient({ adapter } as any);
 
-// Sample seed data — cities from Pakistan + popular travel destinations
 const COUNTRIES = [
   { name: "Pakistan", code: "PK" },
   { name: "Turkey", code: "TR" },
@@ -32,7 +39,6 @@ const CITIES: Record<string, string[]> = {
 async function main() {
   console.log("🌱 Seeding database...");
 
-  // Countries
   for (const country of COUNTRIES) {
     await prisma.country.upsert({
       where: { code: country.code },
@@ -40,10 +46,10 @@ async function main() {
       create: country,
     });
   }
-  console.log("✅ Countries seeded");
+  console.log("✅ Countries seeded (10)");
 
-  // Cities
   const countries = await prisma.country.findMany();
+  let cityCount = 0;
   for (const country of countries) {
     const cityNames = CITIES[country.code] ?? [];
     for (const name of cityNames) {
@@ -52,9 +58,10 @@ async function main() {
         update: {},
         create: { name, countryId: country.id },
       });
+      cityCount++;
     }
   }
-  console.log("✅ Cities seeded");
+  console.log(`✅ Cities seeded (${cityCount})`);
 
   // Update full-text search vectors
   await prisma.$executeRaw`
@@ -62,9 +69,9 @@ async function main() {
   `;
   console.log("✅ FTS vectors updated");
 
-  console.log("🎉 Seed complete!");
+  console.log("🎉 Seed complete! Ready to submit places.");
 }
 
 main()
   .catch((e) => { console.error(e); process.exit(1); })
-  .finally(() => prisma.$disconnect());
+  .finally(async () => { await prisma.$disconnect(); await pool.end(); });

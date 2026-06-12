@@ -1,7 +1,5 @@
 "use client";
 import { useEffect, useRef } from "react";
-import "leaflet/dist/leaflet.css";
-import Link from "next/link";
 import type { Map } from "leaflet";
 
 interface Place {
@@ -21,9 +19,17 @@ export default function CityMapView({ places, cityName }: { places: Place[]; cit
   const mapRef = useRef<Map | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
+
+    // Destroy previous instance (StrictMode / hot reload safety)
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
 
     import("leaflet").then((L) => {
+      if (!containerRef.current || mapRef.current) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (L.Icon.Default.prototype as any)._getIconUrl;
 
       const validPlaces = places.filter(
@@ -38,9 +44,9 @@ export default function CityMapView({ places, cityName }: { places: Place[]; cit
       const map = L.map(containerRef.current!, { center, zoom: 13, zoomControl: true });
       mapRef.current = map;
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution: '© <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd", maxZoom: 19,
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '© <a href="https://openstreetmap.org">OpenStreetMap</a>',
+        maxZoom: 19,
       }).addTo(map);
 
       // Fit bounds to all markers

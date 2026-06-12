@@ -3,6 +3,16 @@ import { prisma } from "@/lib/db";
 import { auth } from "@/lib/auth";
 import { invalidateCache } from "@/lib/redis";
 
+async function recomputeScore(placeId: string) {
+  const p = await prisma.place.findUnique({
+    where: { id: placeId },
+    select: { likeCount: true, visitCount: true },
+  });
+  if (!p) return;
+  const score = p.visitCount > 0 ? p.likeCount / p.visitCount : 0;
+  await prisma.place.update({ where: { id: placeId }, data: { score } });
+}
+
 export async function POST(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -21,44 +31,23 @@ export async function POST(
   });
 
   if (existing) {
-    // Unlike
     await prisma.placeLike.delete({
       where: { userId_placeId: { userId: session.user.id, placeId } },
     });
     await prisma.place.update({
       where: { id: placeId },
-      data: {
-        likeCount: { decrement: 1 },
-        lastActivity: new Date(),
-      },
+      data: { likeCount: { decrement: 1 }, lastActivity: new Date() },
     });
-    // Recompute score
-    await prisma.$executeRaw`
-      UPDATE places
-      SET score = CASE WHEN visit_count = 0 THEN 0
-                       ELSE ROUND(like_count::DECIMAL / visit_count, 6) END
-      WHERE id = ${placeId}::uuid
-    `;
+    await recomputeScore(placeId);
     await invalidateCache(`place:${placeId}`, `trending:${place.cityId}`, `underrated:${place.cityId}`);
     return NextResponse.json({ liked: false });
   } else {
-    // Like
-    await prisma.placeLike.create({
-      data: { userId: session.user.id, placeId },
-    });
+    await prisma.placeLike.create({ data: { userId: session.user.id, placeId } });
     await prisma.place.update({
       where: { id: placeId },
-      data: {
-        likeCount: { increment: 1 },
-        lastActivity: new Date(),
-      },
+      data: { likeCount: { increment: 1 }, lastActivity: new Date() },
     });
-    await prisma.$executeRaw`
-      UPDATE places
-      SET score = CASE WHEN visit_count = 0 THEN 0
-                       ELSE ROUND(like_count::DECIMAL / visit_count, 6) END
-      WHERE id = ${placeId}::uuid
-    `;
+    await recomputeScore(placeId);
     await invalidateCache(`place:${placeId}`, `trending:${place.cityId}`, `underrated:${place.cityId}`);
     return NextResponse.json({ liked: true });
   }

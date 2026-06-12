@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { prisma } from "@/lib/db";
 import { notFound } from "next/navigation";
+import { serializePlaces } from "@/lib/serialize";
 import CityPageClient from "./CityPageClient";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
@@ -12,7 +13,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   if (!city) return { title: "City Not Found" };
   return {
     title: `${city.name}, ${city.country.name} — Local Lens`,
-    description: `Discover underrated spots in ${city.name} submitted by locals. Real places, honest rankings.`,
+    description: `Discover underrated spots in ${city.name} submitted by locals.`,
   };
 }
 
@@ -26,7 +27,6 @@ export default async function CityPage({ params }: { params: Promise<{ id: strin
   });
   if (!city) notFound();
 
-  // Fetch both tabs + stats in parallel
   const [trending, underrated, stats] = await Promise.all([
     prisma.place.findMany({
       where: { cityId, status: { not: "possibly_closed" } },
@@ -61,9 +61,9 @@ export default async function CityPage({ params }: { params: Promise<{ id: strin
 
   return (
     <CityPageClient
-      city={{ id: city.id, name: city.name, country: city.country.name, countryCode: city.country.code }}
-      trending={trending as any[]}
-      underrated={underrated as any[]}
+      city={{ id: city!.id, name: city!.name, country: city!.country.name, countryCode: city!.country.code }}
+      trending={serializePlaces(trending as any[])}
+      underrated={serializePlaces(underrated as any[])}
       categoryStats={stats as any[]}
       totalPlaces={totalPlaces}
       localReviewCount={localCount}

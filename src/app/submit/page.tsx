@@ -5,8 +5,9 @@ import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
 import styles from "./page.module.css";
-import { MapPin, ChevronRight, ChevronLeft, Check, Loader } from "lucide-react";
+import { MapPin, ChevronRight, ChevronLeft, Check, Loader, Image as ImageIcon } from "lucide-react";
 import CitySearchBar from "@/components/CitySearchBar/CitySearchBar";
+import PhotoUploader from "@/components/PhotoUploader/PhotoUploader";
 
 const MapPicker = dynamic(() => import("@/components/MapPicker/MapPicker"), { ssr: false });
 
@@ -27,6 +28,7 @@ export default function SubmitPage() {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [photos, setPhotos] = useState<File[]>([]);
   const [form, setForm] = useState<FormState>({
     cityId: null, cityName: "", latitude: null, longitude: null,
     name: "", category: "", description: "",
@@ -48,6 +50,19 @@ export default function SubmitPage() {
   const submit = async () => {
     setLoading(true);
     try {
+      let uploadedUrls: string[] = [];
+      if (photos.length > 0) {
+        const formData = new FormData();
+        photos.forEach((file) => formData.append("files", file));
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok) throw new Error("Upload failed");
+        const data = await uploadRes.json();
+        uploadedUrls = data.urls ?? [];
+      }
+
       const res = await fetch("/api/places", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -55,7 +70,7 @@ export default function SubmitPage() {
           name: form.name, description: form.description,
           category: form.category, cityId: form.cityId,
           latitude: form.latitude, longitude: form.longitude,
-          photoUrls: [],
+          photoUrls: uploadedUrls,
         }),
       });
       if (!res.ok) throw new Error("Failed");
@@ -162,6 +177,14 @@ export default function SubmitPage() {
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })} />
                 </div>
+                <div className="form-group">
+                  <label className="form-label">
+                    <span style={{ display: "inline-flex", gap: "0.4rem", alignItems: "center" }}>
+                      <ImageIcon size={14} /> Photos (optional)
+                    </span>
+                  </label>
+                  <PhotoUploader files={photos} onChange={setPhotos} maxFiles={5} />
+                </div>
               </div>
             </div>
           )}
@@ -176,6 +199,7 @@ export default function SubmitPage() {
                 <div className={styles.reviewRow}><span>Category</span><strong>{form.category}</strong></div>
                 <div className={styles.reviewRow}><span>Location</span><strong>{form.latitude?.toFixed(4)}, {form.longitude?.toFixed(4)}</strong></div>
                 <div className={styles.reviewRow}><span>Description</span><strong>{form.description}</strong></div>
+                <div className={styles.reviewRow}><span>Photos</span><strong>{photos.length} selected</strong></div>
               </div>
             </div>
           )}

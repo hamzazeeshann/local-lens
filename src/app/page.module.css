@@ -1,51 +1,87 @@
+/* ─── City page module CSS ─────────────────────────── */
+/* already exists at src/app/city/[id]/city.module.css  */
+/* This file is the homepage CSS                         */
+
 .hero {
   position: relative;
-  padding: 6rem 0 5rem;
+  min-height: 90vh;
+  display: flex;
+  align-items: center;
   overflow: hidden;
+  border-bottom: 1px solid var(--border);
 }
+
 .heroGlow {
-  position: absolute;
-  top: -200px; left: 50%;
-  transform: translateX(-50%);
-  width: 700px; height: 700px;
-  background: radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 65%);
-  pointer-events: none;
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(245,166,35,0.12) 0%, transparent 65%);
+  pointer-events: none; z-index: 0;
 }
+
+/* Dot grid */
 .heroDots {
   position: absolute; inset: 0;
   background-image: radial-gradient(var(--border) 1px, transparent 1px);
   background-size: 32px 32px;
-  opacity: 0.4;
-  pointer-events: none;
+  opacity: 0.5; pointer-events: none; z-index: 0;
 }
+
 .heroContent {
   position: relative; z-index: 1;
-  display: flex; flex-direction: column; align-items: center;
-  text-align: center; gap: 1.5rem;
   max-width: 680px; margin: 0 auto;
+  padding: 6rem 0 4rem;
+  text-align: center;
 }
-.heroPill { font-size: 0.75rem; }
-.heroTitle { line-height: 1.1; }
-.heroSub { font-size: 1.05rem; color: var(--text-2); line-height: 1.7; max-width: 520px; }
-.heroSearch { width: 100%; max-width: 480px; }
-.heroStats { display: flex; align-items: center; gap: 0.75rem; font-size: 0.82rem; color: var(--text-3); }
-.heroStats strong { color: var(--text); }
-.stat { display: flex; align-items: center; gap: 0.3rem; }
-.statDot { width: 3px; height: 3px; border-radius: 50%; background: var(--border-2); }
 
-.sectionHead { margin-bottom: 1.5rem; }
-.sectionHead h2 { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.3rem; }
-.sectionSub { font-size: 0.88rem; color: var(--text-3); }
+.heroPill {
+  margin-bottom: 1.5rem;
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-size: 0.72rem !important;
+}
+
+.heroTitle {
+  font-size: clamp(2.8rem, 7vw, 5rem) !important;
+  line-height: 1.05;
+  margin-bottom: 1.25rem;
+}
+
+.heroSub {
+  font-size: 1.1rem; color: var(--text-2);
+  line-height: 1.7; margin-bottom: 2rem;
+  max-width: 520px; margin-left: auto; margin-right: auto;
+}
+
+.heroSearch { max-width: 520px; margin: 0 auto 2rem; }
+
+.heroStats {
+  display: flex; align-items: center; justify-content: center;
+  gap: 1rem; flex-wrap: wrap;
+}
+.stat { display: flex; align-items: center; gap: 0.35rem; font-size: 0.85rem; color: var(--text-2); }
+.stat strong { color: var(--text); }
+.statDot { width: 4px; height: 4px; border-radius: 50%; background: var(--border-2); }
+
+/* Sections */
+.sectionHead { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
+.sectionHead h2 { display: flex; align-items: center; gap: 0.5rem; font-size: 1.6rem !important; }
+.sectionSub { font-size: 0.85rem; color: var(--text-3); padding-bottom: 0.2rem; }
 .iconAmber { color: var(--amber); }
 
-.viralSection { background: linear-gradient(180deg, var(--bg) 0%, rgba(248,113,113,0.03) 100%); }
+/* Viral section highlight */
+.viralSection {
+  background: linear-gradient(180deg, rgba(248,113,113,0.04) 0%, transparent 100%);
+  border-bottom: 1px solid var(--border);
+}
 
+/* CTA */
 .cta {
-  padding: 4rem 0;
-  background: linear-gradient(135deg, rgba(245,166,35,0.06) 0%, rgba(245,166,35,0.02) 100%);
+  background: var(--bg-2);
   border-top: 1px solid var(--border);
+  padding: 5rem 0;
 }
 .ctaInner {
-  text-align: center; display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  text-align: center;
+  display: flex; flex-direction: column;
+  align-items: center; gap: 1rem;
 }
-.ctaInner p { color: var(--text-2); }
+.ctaInner h2 { font-size: 2.5rem !important; }
+.ctaInner p { color: var(--text-2); max-width: 460px; line-height: 1.65; }

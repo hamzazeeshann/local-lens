@@ -14,17 +14,28 @@ export async function POST(
   const place = await prisma.place.findUnique({ where: { id: placeId } });
   if (!place) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+  // Record the visit
   await prisma.placeVisit.create({ data: { placeId, visitorId } });
 
-  // Increment visit count + recompute score
-  await prisma.$executeRaw`
-    UPDATE places
-    SET visit_count = visit_count + 1,
-        score = CASE WHEN (visit_count + 1) = 0 THEN 0
-                     ELSE ROUND(like_count::DECIMAL / (visit_count + 1), 6) END,
-        last_activity = now()
-    WHERE id = ${placeId}::uuid
-  `;
+  // Increment visitCount via ORM (no raw SQL / no UUID cast issues)
+  const updated = await prisma.place.update({
+    where: { id: placeId },
+    data: {
+      visitCount: { increment: 1 },
+      lastActivity: new Date(),
+    },
+    select: { likeCount: true, visitCount: true },
+  });
+
+  // Recompute score via ORM
+  const newScore = updated.visitCount > 0
+    ? updated.likeCount / updated.visitCount
+    : 0;
+
+  await prisma.place.update({
+    where: { id: placeId },
+    data: { score: newScore },
+  });
 
   await invalidateCache(`place:${placeId}`, `trending:${place.cityId}`);
   return NextResponse.json({ success: true });

@@ -2,21 +2,25 @@ import { Pool } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
-const globalForPrisma = globalThis as unknown as {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  prisma: any;
-};
-
-function createPrismaClient() {
-  const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-  });
-  const adapter = new PrismaPg(pool);
-  return new PrismaClient({ adapter } as never);
+declare global {
+  // eslint-disable-next-line no-var
+  var __prisma: PrismaClient | undefined;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const prisma: any =
-  globalForPrisma.prisma ?? createPrismaClient();
+function createPrismaClient(): PrismaClient {
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+  });
+  const adapter = new PrismaPg(pool);
+  // Prisma v7 requires adapter — no url in schema.prisma
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return new PrismaClient({ adapter } as any);
+}
 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+export const prisma: PrismaClient =
+  global.__prisma ?? createPrismaClient();
+
+if (process.env.NODE_ENV !== "production") {
+  global.__prisma = prisma;
+}

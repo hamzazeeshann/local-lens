@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import toast from "react-hot-toast";
@@ -19,6 +20,7 @@ interface Props { place: any; nearby: any[]; }
 
 export default function PlaceDetailClient({ place, nearby }: Props) {
   const { data: session } = useSession();
+  const router = useRouter();
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(place.likeCount);
   const [visitLogged, setVisitLogged] = useState(false);
@@ -26,6 +28,7 @@ export default function PlaceDetailClient({ place, nearby }: Props) {
   const [submittingReview, setSubmittingReview] = useState(false);
   const [reviews, setReviews] = useState<any[]>(place.reviews || []);
   const [activePhoto, setActivePhoto] = useState(0);
+  const [placeStatus, setPlaceStatus] = useState(place.status);
 
   const score = place.visitCount > 0 ? (place.likeCount / place.visitCount) : 0;
 
@@ -68,12 +71,21 @@ export default function PlaceDetailClient({ place, nearby }: Props) {
     }
   };
 
+  const confirmOpen = async () => {
+    if (!session) { toast.error("Sign in to confirm places"); return; }
+    const res = await fetch(`/api/places/${place.id}/confirm-open`, { method: "POST" });
+    if (res.ok) {
+      setPlaceStatus("active");
+      toast.success("Thanks! Marked as still open.");
+    }
+  };
+
   const STATUS_MAP: Record<string, { icon: React.ReactNode; label: string; cls: string }> = {
     active:          { icon: <CheckCircle size={13} />, label: "Active", cls: "badge-green" },
     viral:           { icon: <Zap size={13} />, label: "Going Viral 🔥", cls: "badge-red" },
     possibly_closed: { icon: <AlertTriangle size={13} />, label: "Possibly Closed", cls: "badge-amber" },
   };
-  const statusInfo = STATUS_MAP[place.status] ?? STATUS_MAP.active;
+  const statusInfo = STATUS_MAP[placeStatus] ?? STATUS_MAP.active;
 
   return (
     <div className={styles.page}>
@@ -104,9 +116,9 @@ export default function PlaceDetailClient({ place, nearby }: Props) {
         <div className={styles.heroOverlay} />
 
         {/* Back button */}
-        <Link href="javascript:history.back()" className={styles.backBtn}>
+        <button onClick={() => router.back()} className={styles.backBtn}>
           <ChevronLeft size={18} /> Back
-        </Link>
+        </button>
       </div>
 
       {/* ─── Main content ─────────────────────────────────── */}
@@ -178,8 +190,8 @@ export default function PlaceDetailClient({ place, nearby }: Props) {
                 <Heart size={16} fill={liked ? "currentColor" : "none"} />
                 {liked ? "Liked" : "Like this place"}
               </button>
-              {place.status === "possibly_closed" && (
-                <button className="btn btn-ghost" style={{ fontSize: "0.82rem" }}>
+              {placeStatus === "possibly_closed" && (
+                <button className="btn btn-ghost" style={{ fontSize: "0.82rem" }} onClick={confirmOpen}>
                   <CheckCircle size={14} /> Still open? Confirm
                 </button>
               )}

@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef } from "react";
-import "leaflet/dist/leaflet.css";
 import type { Map } from "leaflet";
 
 export default function MiniMap({ lat, lng, name }: { lat: number; lng: number; name: string }) {
@@ -8,19 +7,27 @@ export default function MiniMap({ lat, lng, name }: { lat: number; lng: number; 
   const mapRef = useRef<Map | null>(null);
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
+    if (!containerRef.current) return;
+
+    // Destroy existing instance first (React StrictMode runs effect twice)
+    if (mapRef.current) {
+      mapRef.current.remove();
+      mapRef.current = null;
+    }
 
     import("leaflet").then((L) => {
+      if (!containerRef.current || mapRef.current) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       delete (L.Icon.Default.prototype as any)._getIconUrl;
 
-      const map = L.map(containerRef.current!, {
+      const map = L.map(containerRef.current, {
         center: [lat, lng], zoom: 15,
         zoomControl: false, dragging: false, scrollWheelZoom: false,
       });
       mapRef.current = map;
 
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
-        attribution: '© CARTO', subdomains: "abcd", maxZoom: 19,
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: "© OpenStreetMap", maxZoom: 19,
       }).addTo(map);
 
       const icon = L.divIcon({
@@ -38,7 +45,10 @@ export default function MiniMap({ lat, lng, name }: { lat: number; lng: number; 
         .openPopup();
     });
 
-    return () => { mapRef.current?.remove(); mapRef.current = null; };
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
   }, [lat, lng, name]);
 
   return <div ref={containerRef} style={{ width: "100%", height: "100%", borderRadius: "inherit" }} />;
